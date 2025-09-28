@@ -1,4 +1,5 @@
 #+TITLE: ABDUCTIO (Free): A Framework for Deciding What to Do Next
+#+AUTHOR: David Joseph
 #+SUBTITLE: How to avoid the hidden pitfalls that sink promising projects.
 #+OPTIONS: toc:nil num:t date:nil
 #+LATEX_HEADER: \usepackage[margin=1in]{geometry}

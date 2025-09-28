@@ -1,5 +1,5 @@
 #+TITLE: ABDUCTIO (Open Evidence Pack): Reproducible Demos & High-Level Validation Map
-#+AUTHOR:
+#+AUTHOR: David Joseph
 #+OPTIONS: toc:3 num:t ^:nil tex:t pri:t
 #+LANGUAGE: en
 #+PROPERTY: header-args:python :results output :session none :exports both
