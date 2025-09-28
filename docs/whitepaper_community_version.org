@@ -1,0 +1,174 @@
+#+TITLE: ABDUCTIO (Free): A Framework for Deciding What to Do Next
+#+SUBTITLE: How to avoid the hidden pitfalls that sink promising projects.
+#+OPTIONS: toc:nil num:t date:nil
+#+LATEX_HEADER: \usepackage[margin=1in]{geometry}
+#+LATEX_HEADER: \usepackage{amsmath, amssymb}
+#+LATEX_HEADER: \usepackage{graphicx}
+#+LATEX_HEADER: \usepackage{tabularx}
+#+LATEX_HEADER: \usepackage{booktabs}
+
+* 1. The Story of Project Chimera: The High-Credence Trap
+Imagine you’re a VP of R&D at a materials science company. A team of your brightest chemists presents "Project Chimera," a new catalyst that shows a 200% efficiency gain in lab-scale tests. The data is clean, the chemistry is sound, and the team is ecstatic. This looks like the breakthrough you've been waiting for.
+
+The immediate impulse is to celebrate and fast-track a multi-million dollar pilot plant. After all, the evidence is right there. *Your belief that the catalyst /works/ is incredibly high.*
+
+This is the *High-Credence Trap*.
+
+The project is a chimera not because the chemistry is wrong, but because an unexamined assumption makes it commercially non-viable. The synthesis requires a rare platinum-group metal as a precursor. At the milligram scale of the lab, its cost is trivial. But a back-of-the-envelope calculation—one that nobody has been incentivized to do yet—shows that producing the catalyst at an industrial ton-scale would cost more than the entire market for the end product is worth.
+
+The project is doomed. But it’s not doomed because of the science everyone is focused on; it’s doomed because of a simple economic reality hiding in plain sight. An inexperienced team, chasing the excitement of the initial discovery, could waste a year and millions of dollars before hitting this wall.
+
+ABDUCTIO is a system designed to spot these hidden-in-plain-sight pitfalls. It provides a lightweight but rigorous framework to force the right questions at the right time, ensuring that you discover the fatal flaw in two days of analysis, not two years of development.
+
+* 2. The Two Numbers That Matter: Credence and Confidence
+The High-Credence Trap arises because we typically only track one metric: our belief in a claim. ABDUCTIO's core insight is that you must track two.
+
+** Credence ($p$): /What do we believe?/
+This is our best guess at the probability of a claim being true, from 0 to 1. For Project Chimera, credence in the claim "the catalyst has 200% efficiency" was high ($p \approx 0.9$).
+
+** Confidence ($k$): /How stable is our belief?/
+This is the crucial second metric. Confidence measures the /robustness/ of our belief. It asks: *"How much would our credence ($p$) move under reasonable re-examination?"*
+
+For Project Chimera, confidence in the /commercial viability/ was critically low ($k \approx 0.2$). Why? Because the belief was brittle—it rested on the unexamined assumption of economic scalability.
+
+Crucially, these two numbers can be attached to /any/ claim, from the top-level "Is this project a good bet?" to a granular prerequisite like "Can our supply chain source this material affordably?" This allows us to map out uncertainty with precision.  When a claim is assessed among alternatives, ABDUCTIO tracks those rivals in a simple external Rivals Ledger to keep probabilities coherent (see §4.3).
+
+#+begin_export latex
+\begin{table}[htbp]
+\centering
+\caption{The ABDUCTIO 2x2 matrix for triaging uncertainty.}
+\begin{tabularx}{\textwidth}{@{}l X X@{}}
+\toprule
+ & \textbf{Low Credence} (Probably False) & \textbf{High Credence} (Probably True) \\
+\midrule
+\textbf{High Confidence} & \textit{“The Obvious No”} \newline Action: Reject \& Stop. & \textit{“The Solid Bet”} \newline Action: Accept \& Proceed. \\
+\addlinespace
+\textbf{Low Confidence} & \textit{“The Plausible Longshot”} \newline Action: Investigate Bottleneck. & \textit{“The High-Credence Trap”} (Project Chimera) \newline Action: Investigate Bottleneck. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+#+end_export
+
+* 3. Reasoner-Agnostic Orchestration
+ABDUCTIO standardizes the signal, not the method. It’s a reasoner-agnostic framework: any assessor—a subject-matter expert, a cross-functional reviewer, an LLM, or an automated check—can produce a pair ($p$, $k$) for any proposition.
+
+- *Uniform Signal:* Every assessor returns credence $p$, confidence $k$, and three short factors that most influenced their scores.
+- *Method Neutrality:* Literature review, simulation, heuristics, or model inference are all valid ways to arrive at ($p$, $k$).
+- *Composable Panels:* Mix human experts for depth, LLMs for speed and breadth, and automated "sanity checks" (e.g., unit tests, order-of-magnitude checks) for guardrails.
+
+This approach gives you the power of collective intelligence without a monolithic method—a bigger brain, not a bigger bureaucracy.
+
+* 4. The Engine: How ABDUCTIO Works
+ABDUCTIO runs a simple loop guided by one idea: *only go deeper when it’s likely to change the decision.* Before explaining the loop, let’s look at its components.
+
+** Collective Intelligence, Without Chaos
+Ensembles are powerful if disciplined. ABDUCTIO uses four guardrails:
+1. *Independence First:* We collect the first round of ($p$, $k$) independently to avoid groupthink.
+2. *Robust Pooling:* The free tier uses medians for both $p$ and $k$ across assessors, which resists outliers and basic gaming.
+3. *Structured Disagreement:* We display a disagreement map showing the spread of $p$ and $k$. Disagreement isn’t a failure; it’s a compass pointing to the most important sub-problem.
+4. *Lightweight Iteration:* After pooling, assessors may optionally revise once. The process stops if the median $k$ passes the confidence gate.
+
+** Decomposition Grammar (Free Edition)
+We keep the reasoning graph simple and auditable:
+- *Nodes:* Propositions with ($p$, $k$) and a 1-3 line rationale.
+- *Edges:* *AND* (“all must hold”) or *OR* (“any route suffices”).
+- *Aggregation:* Conservative defaults: AND uses $p=\min, k=\min$; OR uses $p=\max, k=\max$.
+- *Rivals* (outside the graph): When alternatives exist, track them in the Rivals Ledger (see §4.3); rivals are not nodes.
+
+** Rivals Ledger (Obligatory): Alternatives and Monotonicity
+Some claims are evaluated among **mutually exclusive** alternatives. ABDUCTIO keeps those alternatives **outside** the decomposition graph in a minimal ledger that preserves probability mass and prevents a common pathology: “rivals weaken while the focal credence stays flat.”
+
+- *Scope and State.* Define \(\mathcal H=\{H^*, H_1,\ldots,H_r, H_0\}\): the focal hypothesis \(H^*\), named rivals \(H_j\), and a catch-all **Other** \(H_0\). Maintain a pooled probability vector \(\mathbf p=(p(H^*), p(H_1),\ldots,p(H_r), p(H_0))\) with \(\sum_h p(h)=1\). Decomposition (AND/OR; min/max) happens **inside** \(H^*\); rivals never become nodes.
+
+- *Round Tagging.* After each round’s pooling, tag the update as exactly one of:
+  1) **Focal-tree:** validated evidence changed a focal child/node.
+  2) **Rivals-only:** validated evidence changed one or more rivals and introduced **no new disconfirming fact** for any focal child.
+  3) **Mixed:** both effects (treat as Focal-tree first, then any residual rivals change).
+
+- *Transfer Rule (Obligatory).* Let \(\Delta_j := p_{t+1}(H_j)-p_t(H_j)\) be the pooled change to rival \(H_j\).
+  - **Focal-tree / Mixed:** Update the focal tree first (existing min/max rules), then apply rivals’ \(\Delta_j\) as assessed (no forced transfer).
+  - **Rivals-only:** Enforce **monotonicity** and **mass conservation**:
+    - If your rivals are declared **exhaustive** (MECE), then
+      \[
+      L := -\!\!\sum_{j=1}^r \min(\Delta_j,0)\ (\ge 0),\quad
+      p_{t+1}(H^*) \leftarrow p_t(H^*) + L,\quad
+      p_{t+1}(H_j) \leftarrow p_t(H_j)+\Delta_j.
+      \]
+    - If the set is **open-world** (not exhaustive), declare a *completeness factor* \(c\in[0,1]\) (default \(c=1-p_t(H_0)\)) and split the rivals’ loss:
+      \[
+      p_{t+1}(H^*) \leftarrow p_t(H^*) + cL,\qquad
+      p_{t+1}(H_0) \leftarrow p_t(H_0) + (1-c)L.
+      \]
+    In both modes: \(p_{t+1}(H^*) \ge p_t(H^*)\) when the tag is **Rivals-only**, and \(\sum_h p_{t+1}(h)=1\).
+
+- *Ambiguity Brake.* If tagging is uncertain (e.g., the same evidence weakens a rival **and** slightly disconfirms a focal child), treat as **Mixed** and **do not** apply the transfer.
+
+- *Audit.* Log the tag, evidence IDs affecting each \(H_j\), the before/after \(\mathbf p\), and (for open-world) the chosen \(c\) with a one-line rationale.
+
+- *Why this matters.* This ledger guarantees:  
+  **Invariant:** If the step is Rivals-only, then \(p(H^*)\) **cannot decrease**. The “alternatives weakened, focal unchanged” failure mode is impossible.
+
+** The Loop: Assess $\rightarrow$ Gate $\rightarrow$ Decompose $\rightarrow$ Repeat
+1. *Assess the claim.* Elicit *Credence* ($p$) and *Confidence* ($k$) from your panel of reasoners.
+2. *Gate on confidence.* If the pooled median confidence $k \ge \tau$ (your chosen confidence gate), act on what you have—proceed or reject. If $k < \tau$, don’t debate: decompose.
+3. *Decompose the claim.* Ask: “What must be true for this to be true?” Create sub-claims with AND/OR links.
+4. *Find the bottleneck.* Pick the lowest-confidence prerequisite that gates the parent (an AND-link) or unlocks a major route (an OR-link). This becomes the single next step for investigation.
+5. *Act and Update.* The free tool asks you to input a rough cost and turnaround time for this next step, showing you the decision leverage versus the effort. Once you run that one analysis or experiment, you update its ($p$, $k$) and re-run the gate.
+
+* 5. ABDUCTIO in Action: Applications
+This framework brings clarity to any high-stakes problem:
+
+- *Technology:* An AI model shows state-of-the-art accuracy (high credence), but confidence is low because its robustness to adversarial attacks is unknown. ABDUCTIO directs effort to that specific robustness test, not more accuracy benchmarks.
+- *Strategy:* A proposed merger looks great on paper (high credence), but confidence is low due to unexamined assumptions about cultural integration. ABDUCTIO prioritizes a cultural due diligence step over further financial modeling.
+- *Research:* A new Alzheimer's drug shows promise in mice (high credence), but confidence in its human efficacy is low. ABDUCTIO helps decompose the "translatability" problem to pinpoint the most uncertain biological mechanism to test next.
+
+* 6. The ABDUCTIO Difference: Radical Transparency
+ABDUCTIO favors inspectable reasoning over black boxes. The free tier gives your team the tools to build confidence in your process.
+
+** Provenance & Audit (Free "Lite")
+- Every node logs who, when, ($p$, $k$), and the three influencing factors.
+- Each change creates a new revision; old states remain visible.
+- Reasoning trees are shareable within your organization and exportable.
+
+** Calibration, Without the Lab Coat
+Confidence is only useful if it’s calibrated. The free tier gives teams a light, honest kit:
+- *Anchors:* Use a handful of known-outcome “calibration cards” from your domain to see how your estimates perform.
+- *Reliability Strip:* A quick plot of your stated $p$ vs. actual outcomes on anchor cases provides a simple sanity check on your team's calibration.
+- *Self-Awareness Prompts:* Nudge assessors to name what would change their minds, often revealing the next decomposition step.
+
+** Where Enterprise Takes Over
+- *Confidence you can trust:* Compute $k$ from stability checks (paraphrase/sensitivity tests, rater calibration) instead of self-report.
+- *Prioritization that pays:* Automated, cost-aware prioritization that weighs decision leverage and declared costs.
+- *Assurance at scale:* Sealed audit bundles, portfolio views, and governance hooks for compliance-heavy teams.
+
+* 7. Conclusion
+The challenge in modern decision-making isn't a lack of information; it's a lack of a rational framework for processing it. We fall into traps like Project Chimera not because we are unintelligent, but because we are undisciplined in how we examine our own beliefs.
+
+ABDUCTIO provides that discipline. It’s a simple, powerful system for surfacing the unexamined assumptions that put our most important projects at risk. It helps us understand not just what we don't know, but *what's worth knowing next.*
+
+* Appendix: Interchange Card Schema
+To combine humans, models, and automated checks, ABDUCTIO uses a simple, uniform data structure for every assessment.
+
+#+begin_src json
+{
+  "proposition": "SAE level-4 stack is safe for downtown deployment in 2026",
+  "assessment": {
+    "p": 0.58,
+    "k": 0.42,
+    "factors": [
+      "rare-edge-case handling unclear",
+      "simulation-to-road gap unresolved",
+      "sensor redundancy promising"
+    ]
+  },
+  "assessor": {
+    "type": "human|llm|check",
+    "role": "safety_engineer",
+    "id": "anon-1372"
+  },
+  "context": {
+    "evidence_refs": ["doc://safety-PRD#42", "sim://run-0198"],
+    "timestamp": "2025-09-27T17:01:13Z"
+  }
+}
+#+end_src
