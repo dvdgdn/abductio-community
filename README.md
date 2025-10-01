@@ -1,146 +1,293 @@
+# ABDUCTIO: Structured Reasoning for High-Stakes Decisions
 
-# ABDUCTIO™ — a BS detector that shows its work
+## Overview
 
-There's too much noise. Our guts can't keep up.  
-**ABDUCTIO** helps you separate signal from spin by **breaking a claim into checkable pieces**, flagging weak links, and telling you **what to verify next**. It shows its work—no vibes.
+ABDUCTIO is a framework for systematically examining claims by breaking them into testable components, identifying hidden assumptions, and prioritizing what to verify next. It's designed for situations where gut feelings aren't enough and the cost of being wrong is high.
 
----
+The framework exists in two versions with genuinely different capabilities:
 
-## Quick start (30 seconds)
+**ABDUCTIO Free** — A reasoning scaffold that runs through any LLM. It structures thinking and surfaces hidden assumptions, but the numbers it generates are heuristic guides, not statistical calculations.
 
-You can turn **any LLM** (ChatGPT, Claude, local models, etc.) into an **ABDUCTIO reasoner** with one prompt.
+**ABDUCTIO Pro** — A computational system with calibrated probability estimates, proper scoring, and economically-grounded stopping rules. This requires real software, not just an LLM.
 
-1. Open the prompt and copy it:  
-   **[`docs/llm_prompt.txt`](https://github.com/dvdgdn/abductio-community/blob/main/docs/llm_prompt.txt)**  
-   *(Click **Raw** → copy all.)*
+This documentation covers the Free version. For decisions requiring statistical rigor—regulatory submissions, portfolio optimization, formal risk assessment—Pro is necessary.
 
-2. Paste it into a new chat with your LLM.
+## The Core Problem: High-Credence Traps
 
-3. Run your first check by typing a claim:
+Consider a materials science team that develops a catalyst showing 200% efficiency gains in the lab. The chemistry is sound. The data is clean. Confidence in "this catalyst works" is high.
 
-```txt
-claim: "Cutting meetings to 15 minutes boosts team output."
+The team is about to fast-track a multi-million dollar pilot plant when someone runs a back-of-envelope calculation: at industrial scale, the rare platinum-group precursor would cost more than the entire market for the end product.
+
+The project isn't wrong because the chemistry failed. It's doomed because an economic assumption went unexamined.
+
+ABDUCTIO catches this pattern: **high confidence in one dimension masking fatal brittleness in another.**
+
+## Core Concepts
+
+ABDUCTIO tracks two numbers for every claim:
+
+**Credence (p)** — Best estimate of probability (0 to 1)  
+**Confidence (k)** — Stability of that estimate (0 to 1)
+
+High credence with low confidence means "we believe this, but we haven't checked the things that would break it."
+
+The framework then:
+
+1. **Decomposes** the claim into AND/OR prerequisites
+2. **Identifies** which assumptions are most brittle (lowest k)
+3. **Prioritizes** what single fact would most change the decision
+4. **Stops** when further investigation won't affect the action
+
+## Capabilities and Limitations
+
+### What the LLM Version Does Well
+
+The LLM implementation leverages what language models are genuinely good at:
+
+- **Structural decomposition** — Breaking complex claims into logical prerequisites
+- **Assumption surfacing** — Identifying implicit dependencies in arguments
+- **Comparative reasoning** — "This is more uncertain than that"
+- **Alternative generation** — Proposing rival hypotheses
+- **Evidence prioritization** — Rough ordering of what to check next
+
+### Technical Limitations
+
+The LLM version has clear constraints because LLMs are pattern-matching systems, not symbolic reasoners:
+
+- **Numerical reliability** — Probability calculations will drift across conversation turns
+- **Calibrated confidence** — The k values are heuristic rankings, not predictions
+- **Optimal stopping** — Uses "leverage > effort" heuristics, not exact EVSI
+- **Proper scoring** — No incentive mechanism for honest reporting
+- **State consistency** — Will occasionally lose track of complex trees
+
+### How to Interpret the Output
+
+**Treat the numbers as discussion aids, not measurements.** When ABDUCTIO Free says p=0.42, interpret this as "slightly more likely false than true based on current analysis," not "42% probability computed using validated methods."
+
+The value lies in the structured process—forcing decomposition, considering alternatives, identifying bottlenecks—not in numerical precision.
+
+## Quick Start
+
+1. Copy the prompt: [`docs/llm_prompt.txt`](docs/llm_prompt.txt)
+2. Paste into any LLM (ChatGPT, Claude, local model)
+3. Type: `claim: <your claim>`
+
+Example:# ABDUCTIO: Structured Reasoning for High-Stakes Decisions
+
+## Overview
+
+ABDUCTIO is a framework for systematically examining claims by breaking them into testable components, identifying hidden assumptions, and prioritizing what to verify next. It's designed for situations where gut feelings aren't enough and the cost of being wrong is high.
+
+The framework exists in two versions with genuinely different capabilities:
+
+**ABDUCTIO Free** — A reasoning scaffold that runs through any LLM. It structures thinking and surfaces hidden assumptions, but the numbers it generates are heuristic guides, not statistical calculations.
+
+**ABDUCTIO Pro** — A computational system with calibrated probability estimates, proper scoring, and economically-grounded stopping rules. This requires real software, not just an LLM.
+
+This documentation covers the Free version. For decisions requiring statistical rigor—regulatory submissions, portfolio optimization, formal risk assessment—Pro is necessary.
+
+## The Core Problem: High-Credence Traps
+
+Consider a materials science team that develops a catalyst showing 200% efficiency gains in the lab. The chemistry is sound. The data is clean. Confidence in "this catalyst works" is high.
+
+The team is about to fast-track a multi-million dollar pilot plant when someone runs a back-of-envelope calculation: at industrial scale, the rare platinum-group precursor would cost more than the entire market for the end product.
+
+The project isn't wrong because the chemistry failed. It's doomed because an economic assumption went unexamined.
+
+ABDUCTIO catches this pattern: **high confidence in one dimension masking fatal brittleness in another.**
+
+## Core Concepts
+
+ABDUCTIO tracks two numbers for every claim:
+
+**Credence (p)** — Best estimate of probability (0 to 1)  
+**Confidence (k)** — Stability of that estimate (0 to 1)
+
+High credence with low confidence means "we believe this, but we haven't checked the things that would break it."
+
+The framework then:
+
+1. **Decomposes** the claim into AND/OR prerequisites
+2. **Identifies** which assumptions are most brittle (lowest k)
+3. **Prioritizes** what single fact would most change the decision
+4. **Stops** when further investigation won't affect the action
+
+## Capabilities and Limitations
+
+### What the LLM Version Does Well
+
+The LLM implementation leverages what language models are genuinely good at:
+
+- **Structural decomposition** — Breaking complex claims into logical prerequisites
+- **Assumption surfacing** — Identifying implicit dependencies in arguments
+- **Comparative reasoning** — "This is more uncertain than that"
+- **Alternative generation** — Proposing rival hypotheses
+- **Evidence prioritization** — Rough ordering of what to check next
+
+### Technical Limitations
+
+The LLM version has clear constraints because LLMs are pattern-matching systems, not symbolic reasoners:
+
+- **Numerical reliability** — Probability calculations will drift across conversation turns
+- **Calibrated confidence** — The k values are heuristic rankings, not predictions
+- **Optimal stopping** — Uses "leverage > effort" heuristics, not exact EVSI
+- **Proper scoring** — No incentive mechanism for honest reporting
+- **State consistency** — Will occasionally lose track of complex trees
+
+### How to Interpret the Output
+
+**Treat the numbers as discussion aids, not measurements.** When ABDUCTIO Free says p=0.42, interpret this as "slightly more likely false than true based on current analysis," not "42% probability computed using validated methods."
+
+The value lies in the structured process—forcing decomposition, considering alternatives, identifying bottlenecks—not in numerical precision.
+
+## Quick Start
+
+1. Copy the prompt: [`docs/llm_prompt.txt`](docs/llm_prompt.txt)
+2. Paste into any LLM (ChatGPT, Claude, local model)
+3. Type: `claim: <your claim>`
+
+Example:
+
 ```
-
-You'll get:
-
-- a breakdown of the claim into small, checkable parts,
-- the weakest links,
-- what single fact to check next (and how),
-- a simple continue / pause recommendation with reasons.
-
-**Tip:** If you want to stay anonymous, use placeholders. ABDUCTIO evaluates the logic, not the author.
-
-## What it does (plain English)
-
-- **Deconstructs your claim** → makes it bite-size and testable.
-- **Finds weak spots** → shows what's most likely to fail.
-- **Tells you what to check next** → the smallest thing that could change the conclusion.
-- **Knows when to stop** → if more digging won't change the answer, it tells you to save your time.
-
-It's not a truth oracle. It's a disciplined way to pressure-test a claim and focus effort where it matters.
-
-## Why trust it? (Receipts you can replay)
-
-**Toy A/B-style demo (replayable)**  
-A tiny, synthetic example where grabbing one solid fact first reduced re-work and improved first-pass approvals.  
-*Takeaway: a single targeted check can pay for itself.*
-
-**Public "coin-flip" demo (digits of π)**  
-Using the digits of π as a public random source, ABDUCTIO only asks for more evidence when that could change the call—otherwise it stops. No magic, fully reproducible.  
-*Takeaway: it doesn't over-collect trivia; it focuses on decisions.*
-
-Want the details? See the open docs:
-
-- **Prompt** (turn any LLM into an ABDUCTIO runner):  
-  [`docs/llm_prompt.txt`](docs/llm_prompt.txt)
-
-- **Community whitepaper** (plain math + design notes):  
-  [`docs/whitepaper_community_version.org`](docs/whitepaper_community_version.org)
-
-- **Open evidence pack** (reproducible demos):  
-  [`docs/evidence_pack.org`](docs/evidence_pack.org)
-
-*(Some production guardrails are private to keep the system robust; the open parts are standard and reproducible.)*
-
-## When to use it
-
-- Before posting a spicy take.
-- Costly decisions with fuzzy inputs (product bets, hiring, vendor claims).
-- Client/stakeholder memos where you want to show your logic, not just confidence.
-- Triage: decide whether to dig deeper—and exactly where.
-
-## Example
-
-**Input**
-```txt
-claim: "Hiring from top schools leads to better on-the-job performance."
+claim: Our new recommendation algorithm will increase user engagement by 15%.
 ```
+Output includes:
+- Decomposition into testable prerequisites
+- Identification of unexamined assumptions
+- Prioritized next verification step
+- Continue/pause recommendation with reasoning
 
-**Output (abridged)**
+## Use Cases
 
-**Breakdown**
-- A. "Top school" correlates with skills relevant to this role.
-- B. Practical performance is measured consistently in your data.
-- C. After controlling for role/tenure/manager, the effect still holds.
+### Appropriate Applications
 
-**Weak links**
-- (B) Performance metrics differ across teams.
-- (C) Past analyses didn't control for role or manager effects.
+- Pre-mortems: "What could make this fail?"
+- Vendor claim evaluation: "What assumptions underlie their promises?"
+- Research triage: "Which uncertainty should we resolve first?"
+- Stakeholder communication: "Here's our reasoning, not just our conclusion"
 
-**What to verify next (fastest win)**
-Pull last 12 months of ratings + role + tenure; run a simple matched comparison.  
-If the matched difference ≥ X, the claim holds; if not, revise policy.
+### Inappropriate Applications
 
-**Call**
-Pause policy change until the matched comparison is run. More generic stats won't change the answer.
+- Regulatory submissions requiring statistical validation
+- Portfolio optimization with precise probability requirements
+- Situations where numerical drift would be catastrophic
+- Real-time decision support (the iterative process takes time)
 
-## Pro (invite-only, early access)
+## The Rivals Ledger
 
-For heavier use and higher stakes:
+One component performs particularly well in the LLM version: the Rivals Ledger. This mechanically tracks competing hypotheses and enforces a conservation rule: if evidence weakens alternatives, the focal hypothesis gains probability mass.
 
-- Deeper checks on bigger, messier claims
-- Batch runs + shareable reports
-- Private reviews with an audit trail
-- Team/client workflows
-- Priority help on deadlines
+This prevents a common failure mode where people acknowledge alternatives exist but never update beliefs when those alternatives fail.
 
-**Request access:** [open an issue](https://github.com/dvdgdn/abductio-community/issues/new) →  
-**New Issue: Pro access**  
-*(or DM "Pro" via the contact in the repo description)*
+Example:
+```
+Focal: New drug reduces symptoms through mechanism X
+Rival 1: Observed effects are placebo
+Rival 2: Measurement artifact from unblinded raters
+Rival 3: Natural symptom regression
+Evidence: Double-blind trial with objective biomarkers still shows effect
+→ Weakens Rival 1 (placebo) and Rival 2 (bias)
+→ Focal hypothesis gains probability mass
+```
+This forced accounting makes it harder to dismiss alternatives without actually addressing them.
 
-## Repo contents
+## Free vs Pro Comparison
 
-- [`docs/llm_prompt.txt`](docs/llm_prompt.txt) — the prompt that turns any LLM into an ABDUCTIO reasoner (start here).
-- [`docs/whitepaper_community_version.org`](docs/whitepaper_community_version.org) — background and design notes.
-- [`docs/evidence_pack.org`](docs/evidence_pack.org) — reproducible demos ("receipts").
+| Capability | Free (LLM) | Pro (Software) |
+|-----------|-----------|---------------|
+| Decomposition structure | ✓ | ✓ |
+| Rivals tracking | ✓ | ✓ |
+| Credence estimates | Heuristic | Calibrated |
+| Confidence metrics | Rule-based | Movement-predicted |
+| Stopping rule | Leverage vs effort | EVSI vs cost |
+| Multi-assessor pooling | Median | Weighted by calibration |
+| Audit trail | Conversation log | Cryptographically signed |
+| Cost-benefit analysis | Qualitative | Numerical optimization |
 
-## FAQ
+The upgrade path exists for when stakes increase: start with Free for structuring, move to Pro when defensible numbers are required.
 
-**Does this browse the web or call external APIs?**  
-No. It runs wherever your LLM runs. If your LLM can browse, that's your model's behavior, not ABDUCTIO's.
+## Validation Evidence
 
-**Is this open-source?**  
-Yes, the prompt and open demos are public. Some production guardrails remain private.
+ABDUCTIO Free has been tested on two reproducible scenarios:
 
-**How is this different from other "BS detectors"?**  
-It shows its work: clear breakdowns, concrete next checks, and a reason to stop or continue. Not just a score.
+**Synthetic A/B Demo**  
+Simplified project evaluation where one targeted check (verifying a cost assumption) prevented wasted effort on further accuracy improvements. Demonstrates bottleneck identification working as intended.
 
-**Can I run spicy stuff?**  
-Yep. For public airing, open an issue or comment with a claim. Prefer private—or want to ask if aliens built the pyramids? DM us (see repo description).
+**Public Randomness Demo**  
+Using digits of π as a deterministic random source, showed that the stopping rule triggers appropriately: continues when evidence could change the decision, stops when further investigation won't affect the action.
+
+Full details: [`docs/evidence_pack.org`](docs/evidence_pack.org)
+
+These aren't peer-reviewed validation studies. They're demonstrations that the structural logic works as designed in controlled cases.
+
+## Technical Constraints
+
+This is fundamentally a symbolic reasoning task wrapped in a conversational interface. LLMs will:
+
+- Generate plausible-looking numbers that occasionally violate probability axioms
+- Lose track of state in complex trees (>5 levels deep)
+- Miss pattern-match violations despite prompt-level guards
+- Roleplay "executing" analyses rather than admitting limitations
+
+The framework includes guardrails (state reconciliation, explicit k-rules, validation checks) but cannot eliminate these failure modes. Users should verify that probabilities sum to 1, tree structures remain consistent, and recommendations make logical sense.
+
+This is acceptable for a reasoning scaffold. It would be disqualifying for a computational system.
 
 ## Contributing
 
-- Found a rough edge? Open an issue with a minimal example (your exact claim + what felt off).
-- PRs welcome for docs, examples, or tests.
-- Please don't submit private or identifying data.
+Found an edge case where the reasoning breaks down? Open an issue with:
+- Exact claim text
+- The turn where things went wrong
+- Expected vs actual behavior
+
+PRs welcome for:
+- Improved heuristic rules
+- Better validation checks
+- Additional worked examples
+- Documentation clarity
+
+Please don't submit proprietary or identifying data.
+
+## Pro Access
+
+For decisions requiring statistical validation, batch processing, team workflows, or audit compliance:
+
+Open an issue: **"Pro access request"**  
+Include: Use case, organization type, timeline
+
+Selective access during early release. The system works best when users understand the difference between facilitated reasoning and computational guarantees.
+
+## Repository Contents
+
+- [`docs/llm_prompt.txt`](docs/llm_prompt.txt) — Complete prompt for LLM implementation
+- [`docs/whitepaper_community_version.org`](docs/whitepaper_community_version.org) — Framework specification and design rationale
+- [`docs/evidence_pack.org`](docs/evidence_pack.org) — Reproducible test cases
 
 ## License
 
-Open materials in this repo are released under the MIT License (see LICENSE).  
-Trademarks and branding remain the property of their respective owners.
+Open materials: MIT License (see LICENSE)  
+ABDUCTIO™ trademark: Reserved
 
 ---
 
-*If you think everyone's full of it except you, this isn't for you.  
-If you're drowning in takes and need a clear, reproducible way to pressure-test them—welcome.*
+## Frequently Asked Questions
+
+**Why release a version with known limitations?**
+
+Imperfect structure beats unstructured intuition. Teams using ABDUCTIO Free catch hidden assumptions they would have missed entirely. The failure modes are manageable when users understand the constraints.
+
+**How reliable are the probability numbers?**
+
+Treat them as rough guides. Think of them like movie star ratings: useful for relative comparison ("this is weaker than that"), misleading if treated as precise measurements.
+
+**When is Pro necessary?**
+
+If writing results in a regulatory filing, investor memo, or legal document—anything where methodology might be challenged—Pro's statistical rigor is required. For structuring team discussions or prioritizing research, Free is likely sufficient.
+
+**Does this replace domain expertise?**
+
+No. It structures the application of expertise. A materials scientist using ABDUCTIO will catch different assumptions than a software engineer would, because they know different ways things fail. The framework organizes that knowledge; it doesn't generate it.
+
+---
+
+*ABDUCTIO works best for people who take their reasoning seriously enough to make it inspectable—and humble enough to know their first-pass analysis probably missed something important.*
